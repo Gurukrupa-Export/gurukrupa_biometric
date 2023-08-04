@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include gurukrupa_biometric *.css
+recursive-include gurukrupa_biometric *.csv
+recursive-include gurukrupa_biometric *.html
+recursive-include gurukrupa_biometric *.ico
+recursive-include gurukrupa_biometric *.js
+recursive-include gurukrupa_biometric *.json
+recursive-include gurukrupa_biometric *.md
+recursive-include gurukrupa_biometric *.png
+recursive-include gurukrupa_biometric *.py
+recursive-include gurukrupa_biometric *.svg
+recursive-include gurukrupa_biometric *.txt
+recursive-exclude gurukrupa_biometric *.pyc
