@@ -1,0 +1,98 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-08-02 12:49:36.785605",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "employee_attendance_id",
+  "device_serial_no",
+  "device_id",
+  "time",
+  "device_location_floor",
+  "device_location_city",
+  "device_location_state",
+  "is_exists"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name"
+  },
+  {
+   "fieldname": "employee_attendance_id",
+   "fieldtype": "Data",
+   "label": "Employee Attendance ID"
+  },
+  {
+   "fieldname": "device_serial_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Device Serial No",
+   "options": "Biometric Device Master"
+  },
+  {
+   "fetch_from": "device_serial_no.device_id",
+   "fieldname": "device_id",
+   "fieldtype": "Data",
+   "label": "Device ID"
+  },
+  {
+   "fieldname": "time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Time"
+  },
+  {
+   "fetch_from": "device_serial_no.device_location_floor",
+   "fieldname": "device_location_floor",
+   "fieldtype": "Data",
+   "label": "Device Location Floor"
+  },
+  {
+   "fetch_from": "device_serial_no.device_location_city",
+   "fieldname": "device_location_city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Device Location City"
+  },
+  {
+   "fetch_from": "device_serial_no.device_location_state",
+   "fieldname": "device_location_state",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Device Location State"
+  },
+  {
+   "fieldname": "is_exists",
+   "fieldtype": "Select",
+   "label": "Is Exists",
+   "options": "\nexists\nnot exists"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-08-04 12:19:16.072911",
+ "modified_by": "Administrator",
+ "module": "Gurukrupa Biometric",
+ "name": "Biometric Employee Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

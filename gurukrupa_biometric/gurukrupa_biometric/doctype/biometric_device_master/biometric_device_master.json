@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{device_serial_no}",
+ "creation": "2023-08-02 09:58:14.092846",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "api_url_section",
+  "api_url",
+  "column_break_aneio",
+  "api_key",
+  "device_data_section",
+  "device_id",
+  "device_serial_no",
+  "device_model_no",
+  "column_break_r1sgz",
+  "device_location_floor",
+  "device_location_state",
+  "device_location_city"
+ ],
+ "fields": [
+  {
+   "collapsible": 1,
+   "fieldname": "api_url_section",
+   "fieldtype": "Section Break",
+   "label": "API URL"
+  },
+  {
+   "fieldname": "api_url",
+   "fieldtype": "Data",
+   "label": "API URL"
+  },
+  {
+   "fieldname": "column_break_aneio",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Data",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "device_data_section",
+   "fieldtype": "Section Break",
+   "label": "Device Data"
+  },
+  {
+   "fieldname": "device_id",
+   "fieldtype": "Data",
+   "label": "Device Id"
+  },
+  {
+   "fieldname": "device_serial_no",
+   "fieldtype": "Data",
+   "label": "Device Serial No"
+  },
+  {
+   "fieldname": "device_model_no",
+   "fieldtype": "Data",
+   "label": "Device Model No"
+  },
+  {
+   "fieldname": "column_break_r1sgz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "device_location_floor",
+   "fieldtype": "Data",
+   "label": "Device Location Floor"
+  },
+  {
+   "fieldname": "device_location_state",
+   "fieldtype": "Data",
+   "label": "Device Location State"
+  },
+  {
+   "fieldname": "device_location_city",
+   "fieldtype": "Data",
+   "label": "Device Location City"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2023-08-04 12:18:52.365614",
+ "modified_by": "Administrator",
+ "module": "Gurukrupa Biometric",
+ "name": "Biometric Device Master",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
