@@ -1,16 +1,18 @@
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-
+from hrms.hr.doctype.shift_assignment.shift_assignment import get_employee_shift_timings
+from frappe.utils import cint, add_to_date, get_datetime, get_datetime_str
+# import datetime
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, get_datetime
 import requests
-from datetime import datetime
+from datetime import datetime,timedelta
 
 
-# @frappe.whitelist()
+@frappe.whitelist()
 def fetch_and_save_biometric_data():
 	now = datetime.now()
 	today_date = now.strftime("%Y-%m-%d")
@@ -18,7 +20,7 @@ def fetch_and_save_biometric_data():
 	for k in frappe.db.get_list('Employee Checkin',fields=['employee','time']):
 		exist_emp_name.append(f'{k["employee"]}/{k["time"]}')
 	
-
+	
 	api_url = "http://" + frappe.db.get_value('Biometric Device Master','C26238441B391A2F','api_url')
 	
 
@@ -34,39 +36,57 @@ def fetch_and_save_biometric_data():
 	try:
 		# Send GET request to the API
 		response = requests.get(api_url, params=params)
-		print(response.status_code)
+
 		# Check if the request was successful (status code 200)
 		if response.status_code == 200:
 			# Parse the response JSON
 			data = response.json()
 			# Iterate over the logs and save them to "Biometric Data" DocType
 			
-			for log in data[:]:
+			for log in data:
 				employee_code = log['EmployeeCode']
 				serial_number = log['SerialNumber']
 				log_date = log['LogDate']
 				
-				device_detail = frappe.db.get_value('Biometric Device Master',{'name':serial_number},['device_id','device_location_floor','device_location_state','device_location_city'],as_dict=1)
-				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')
+				
+				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')	
 				
 				if f'{employee_name}/{log_date}' in exist_emp_name:
 					continue
-			
-				employee_chekin_data = frappe.db.sql(
+
+				shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]				
+
+				if get_datetime(log_date) > shift_det.actual_start and get_datetime(log_date) < shift_det.actual_end:
+					employee_chekin_data = frappe.db.sql(
 					f"""SELECT log_type  from `tabEmployee Checkin` tec where employee ='{employee_name}' and time < '{log_date}' ORDER BY time DESC """
-				,as_dict=1)
-		
-				if len(employee_chekin_data) == 0: log_type = 'IN'
-				else:
-					if employee_chekin_data[0]['log_type'] == 'IN':
-						log_type = 'OUT'
+					,as_dict=1)
+
+
+					if len(employee_chekin_data) == 0: log_type = 'IN'
 					else:
-						log_type = 'IN'
+						if employee_chekin_data[0]['log_type'] == 'IN':
+							log_type = 'OUT'
+						else:
+							log_type = 'IN'
+				else:
+					log_type = 'IN'
+					employee_chekin_data = frappe.db.sql(
+					f"""SELECT log_type  from `tabEmployee Checkin` tec where employee ='{employee_name}' and time < '{log_date}' ORDER BY time DESC """
+					,as_dict=1)
+
+
+					if len(employee_chekin_data) == 0: log_type = 'IN'
+					else:
+						if employee_chekin_data[0]['log_type'] == 'IN':
+							log_type = 'OUT'
+						else:
+							log_type = 'IN'
+
 				emp_data = frappe.get_doc({
 					"doctype": "Employee Checkin",
 					"employee": employee_name,
 					"time":str(log_date),
-					"device_id":f"{device_detail['device_location_city']}, {device_detail['device_location_state']}/{serial_number}",
+					"device_id":f"{serial_number}",
 					"source":"Biometric",
 					"log_type": log_type
 				})
@@ -80,7 +100,7 @@ def fetch_and_save_biometric_data():
 		frappe.log_error(frappe.get_traceback(),e)
 	
 
-# @frappe.whitelist()
+@frappe.whitelist()
 def set_unique_id():
 	session = requests.Session()
 	response = session.get('http://3.7.85.163:5000/api/data')

@@ -113,12 +113,12 @@ doctype_list_js = {"Employee Checkin" : "public/js/employee_checkin_list.js"}
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
-	"all": [
-		"gurukrupa_biometric.doc_events.employee_checkin.fetch_and_save_biometric_data",
-        "gurukrupa_biometric.doc_events.employee_checkin.set_unique_id",
-	],
-}
+# scheduler_events = {
+# 	"all": [
+# 		"gurukrupa_biometric.doc_events.employee_checkin.fetch_and_save_biometric_data",
+#         "gurukrupa_biometric.doc_events.employee_checkin.set_unique_id",
+# 	],
+# }
 
 # Testing
 # -------
