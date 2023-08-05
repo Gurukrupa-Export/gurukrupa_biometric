@@ -8,11 +8,6 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "api_url_section",
-  "api_url",
-  "column_break_aneio",
-  "api_key",
-  "device_data_section",
   "device_id",
   "device_serial_no",
   "device_model_no",
@@ -22,31 +17,6 @@
   "device_location_city"
  ],
  "fields": [
-  {
-   "collapsible": 1,
-   "fieldname": "api_url_section",
-   "fieldtype": "Section Break",
-   "label": "API URL"
-  },
-  {
-   "fieldname": "api_url",
-   "fieldtype": "Data",
-   "label": "API URL"
-  },
-  {
-   "fieldname": "column_break_aneio",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "api_key",
-   "fieldtype": "Data",
-   "label": "API Key"
-  },
-  {
-   "fieldname": "device_data_section",
-   "fieldtype": "Section Break",
-   "label": "Device Data"
-  },
   {
    "fieldname": "device_id",
    "fieldtype": "Data",
