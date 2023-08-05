@@ -1,0 +1,65 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-08-05 10:12:22.610353",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "biometric_api",
+  "biometric_api_key",
+  "aws_api",
+  "section_break_kmcua",
+  "validate_employee_checkin"
+ ],
+ "fields": [
+  {
+   "fieldname": "biometric_api",
+   "fieldtype": "Data",
+   "label": "Biometric API"
+  },
+  {
+   "fieldname": "biometric_api_key",
+   "fieldtype": "Data",
+   "label": "Biometric API Key"
+  },
+  {
+   "fieldname": "aws_api",
+   "fieldtype": "Data",
+   "label": "AWS API"
+  },
+  {
+   "fieldname": "section_break_kmcua",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "validate_employee_checkin",
+   "fieldtype": "Button",
+   "label": "Validate Employee Checkin"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2023-08-05 11:04:00.318855",
+ "modified_by": "Administrator",
+ "module": "Gurukrupa Biometric",
+ "name": "Biometric Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

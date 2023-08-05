@@ -3,7 +3,6 @@
 
 from hrms.hr.doctype.shift_assignment.shift_assignment import get_employee_shift_timings
 from frappe.utils import cint, add_to_date, get_datetime, get_datetime_str
-# import datetime
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -21,10 +20,9 @@ def fetch_and_save_biometric_data():
 		exist_emp_name.append(f'{k["employee"]}/{k["time"]}')
 	
 	
-	api_url = "http://" + frappe.db.get_value('Biometric Device Master','C26238441B391A2F','api_url')
-	
+	api_url = "http://" + frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api')
 
-	api_key = frappe.db.get_value('Biometric Device Master','C26238441B391A2F','api_key')
+	api_key = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api_key')
 	
 	# Prepare request parameters
 	params = {
@@ -49,38 +47,33 @@ def fetch_and_save_biometric_data():
 				log_date = log['LogDate']
 				
 				
-				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')	
-				
+				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')
+				if employee_name == None:
+					frappe.log_error(f'Employee Not Found for this punch ID {employee_code}')
+					continue
 				if f'{employee_name}/{log_date}' in exist_emp_name:
 					continue
 
-				shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]				
+				shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]
+				
 
 				if get_datetime(log_date) > shift_det.actual_start and get_datetime(log_date) < shift_det.actual_end:
-					employee_chekin_data = frappe.db.sql(
-					f"""SELECT log_type  from `tabEmployee Checkin` tec where employee ='{employee_name}' and time < '{log_date}' ORDER BY time DESC """
-					,as_dict=1)
-
-
-					if len(employee_chekin_data) == 0: log_type = 'IN'
+					if frappe.db.sql(f"""select log_type  from `tabEmployee Checkin` tec where employee = '{employee_name}' and DATE(time)='{today_date}'""",as_dict=1) == []:
+						log_type = 'IN'
 					else:
-						if employee_chekin_data[0]['log_type'] == 'IN':
-							log_type = 'OUT'
+						employee_chekin_data = frappe.db.sql(
+						f"""SELECT log_type  from `tabEmployee Checkin` tec where employee ='{employee_name}' and time < '{log_date}' ORDER BY time DESC """
+						,as_dict=1)
+
+
+						if len(employee_chekin_data) == 0: log_type = 'IN'
 						else:
-							log_type = 'IN'
+							if employee_chekin_data[0]['log_type'] == 'IN':
+								log_type = 'OUT'
+							else:
+								log_type = 'IN'
 				else:
 					log_type = 'IN'
-					employee_chekin_data = frappe.db.sql(
-					f"""SELECT log_type  from `tabEmployee Checkin` tec where employee ='{employee_name}' and time < '{log_date}' ORDER BY time DESC """
-					,as_dict=1)
-
-
-					if len(employee_chekin_data) == 0: log_type = 'IN'
-					else:
-						if employee_chekin_data[0]['log_type'] == 'IN':
-							log_type = 'OUT'
-						else:
-							log_type = 'IN'
 
 				emp_data = frappe.get_doc({
 					"doctype": "Employee Checkin",
@@ -93,17 +86,16 @@ def fetch_and_save_biometric_data():
 				emp_data.insert()
 			return 'ok'
 		else:
-			frappe.msgprint(("Failed to fetch biometric data."))
 			frappe.log_error(frappe.get_traceback(),f"Response code is: {response.status_code}. Check URL")
 	except requests.exceptions.RequestException as e:
-		frappe.msgprint(("An error occurred: {}").format(str(e)))
 		frappe.log_error(frappe.get_traceback(),e)
 	
 
 @frappe.whitelist()
 def set_unique_id():
 	session = requests.Session()
-	response = session.get('http://3.7.85.163:5000/api/data')
+	aws_api = frappe.db.get_value('Biometric Settings','Biometric Settings','aws_api')
+	response = session.get(f'http://{aws_api}')
 	data_list = response.json()
 	for i in data_list:
 		try:
@@ -128,12 +120,18 @@ def validate_data():
 	for i in checkin_data:
 		checkin_emp_data.append(f'{i["employee"]}/{i["time"]}')
 	
-	bio_matric_data = frappe.db.get_list('Biometric Employee Details',filters={'parent':frappe.db.get_list('Biometric Data',order_by='date_time desc',pluck='name')[0]},fields=['employee','time'],order_by='time')
-	for j in bio_matric_data[:]:
-		if f'{j["employee"]}/{j["time"]}' not in checkin_emp_data:
-			index = bio_matric_data.index(j)
-			checkin_time = bio_matric_data[index]['time']
-			employee = frappe.db.get_value('Biometric Employee Details',{'time':datetime.strftime(checkin_time,"%Y-%m-%d %H:%M:%S")},'employee')
-			time = frappe.db.get_value('Biometric Employee Details',{'time':datetime.strftime(checkin_time,"%Y-%m-%d %H:%M:%S")},'time')	
-			frappe.msgprint((f'Missing Data for {employee} of this time {time}'))
-			frappe.log_error(f'Missing Data for {employee} of this time {time}')
+	session = requests.Session()
+	aws_api = frappe.db.get_value('Biometric Settings','Biometric Settings','aws_api')
+	response = session.get(f'http://{aws_api}')
+	data_list = response.json()
+
+	for j in data_list[:]:
+		employee_name = frappe.db.get_value('Employee',{'attendance_device_id':j['punch_id']},'name')
+		datetime_obj = datetime.strptime(j['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
+
+		if employee_name == None:
+			frappe.log_error(f'Employee Not Found for this punch ID {j["punch_id"]}')
+			continue
+		
+		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}' not in checkin_emp_data:
+			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}')
