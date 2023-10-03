@@ -12,10 +12,10 @@ class BiometricData(Document):
 def fetch_and_save_biometric_data():
 	today_date = frappe.utils.nowdate()
 	# API endpoint URL
-	api_url = "http://" + frappe.db.get_value('Biometric Device Master','C26238441B391A2F','api_url')
+	api_url = "http://" + frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api')
 	
 	# API parameters
-	api_key = frappe.db.get_value('Biometric Device Master','C26238441B391A2F','api_key')
+	api_key = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api_key')
 	
 	# Prepare request parameters
 	params = {
