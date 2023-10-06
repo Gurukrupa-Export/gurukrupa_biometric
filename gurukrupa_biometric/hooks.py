@@ -115,8 +115,8 @@ app_license = "MIT"
 
 scheduler_events = {
 	"all": [
-		"gurukrupa_biometric.doc_events.employee_checkin.fetch_and_save_biometric_data",
-        "gurukrupa_biometric.doc_events.employee_checkin.set_unique_id",
+		"gurukrupa_biometric.gurukrupa_biometric.doc_events.employee_checkin.fetch_and_save_biometric_data",
+        "gurukrupa_biometric.gurukrupa_biometric.doc_events.employee_checkin.set_unique_id",
 	],
 }
 
