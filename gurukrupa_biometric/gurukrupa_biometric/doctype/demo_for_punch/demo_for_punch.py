@@ -1,3 +1,13 @@
+# Copyright (c) 2023, Gurukrupa Export and contributors
+# For license information, please see license.txt
+
+# import frappe
+from frappe.model.document import Document
+
+class DemoforPunch(Document):
+	pass
+
+
 # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
@@ -32,6 +42,8 @@ def fetch_and_save_biometric_data():
 		"ToDate": today_date,
 	}
 	
+	# frappe.db.get_list('Holiday','holiday_date')
+	# frappe.throw('hold')
 	try:
 		# Send GET request to the API
 		response = requests.get(api_url, params=params)
@@ -42,10 +54,11 @@ def fetch_and_save_biometric_data():
 			data = response.json()
 			# Iterate over the logs and save them to "Biometric Data" DocType
 			
-			for log in data:
+			for log in data[:]:
 				employee_code = log['EmployeeCode']
 				serial_number = log['SerialNumber']
 				log_date = log['LogDate']
+				frappe.msgprint('Document updated successfully')
 				
 				
 				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')
@@ -55,8 +68,9 @@ def fetch_and_save_biometric_data():
 				if f'{employee_name}/{log_date}' in exist_emp_name:
 					continue
 
-				shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]
 				
+				
+				shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]
 
 				if get_datetime(log_date) > shift_det.actual_start and get_datetime(log_date) < shift_det.actual_end:
 					if frappe.db.sql(f"""select log_type  from `tabEmployee Checkin` tec where employee = '{employee_name}' and DATE(time)='{log_date.split(' ')[0]}'""",as_dict=1) == []:
