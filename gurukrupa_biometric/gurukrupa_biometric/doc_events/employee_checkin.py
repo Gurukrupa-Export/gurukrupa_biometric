@@ -16,36 +16,52 @@ def fetch_and_save_biometric_data():
 	# now = datetime.now()
 	# today_date = now.strftime("%Y-%m-%d")
 	today_date = datetime.now().date()
+	formatted_today_date = today_date.strftime("%d%m%Y")
+	old_date = today_date - timedelta(days=7)
+	formatted_old_date = old_date.strftime("%d%m%Y")
+
+	today_date = datetime.now().date()
 	exist_emp_name = []
 	for k in frappe.db.get_list('Employee Checkin',fields=['employee','time']):
 		exist_emp_name.append(f'{k["employee"]}/{k["time"]}')
 	
-	
-	api_url = "http://" + frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api')
+	api_url = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api')
+
+	url = f"{api_url};date-range={formatted_old_date}-{formatted_today_date}"
 
 	api_key = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api_key')
 	
 	# Prepare request parameters
-	params = {
-		"APIKey": api_key,
-		"FromDate": today_date - timedelta(days=10),
-		"ToDate": today_date,
+	payload = {}
+	headers = {
+	'Authorization': api_key,
+	'Cookie': 'ASP.NET_SessionId=4t2hfqzatrgd4akbdje2xjr4'
 	}
 	
 	try:
 		# Send GET request to the API
-		response = requests.get(api_url, params=params)
+		response = requests.request("GET", url, headers=headers, data=payload)
+		
 
 		# Check if the request was successful (status code 200)
 		if response.status_code == 200:
 			# Parse the response JSON
-			data = response.json()
+			data = response.json()["event-ta"]
 			# Iterate over the logs and save them to "Biometric Data" DocType
 			
 			for log in data:
-				employee_code = log['EmployeeCode']
-				serial_number = log['SerialNumber']
-				log_date = log['LogDate']
+				skip = validate_time_threshold(log)
+				if skip:
+					continue
+
+				employee_code = log['userid']
+				serial_number = log['device_name']
+				original_datetime = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M:%S")
+				# Convert datetime object to desired format
+				log_date = original_datetime.strftime("%Y-%m-%d %H:%M:%S")
+				# log_date = log['eventdatetime']
+				unique_id = log['indexno']
+
 				
 				
 				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')
@@ -82,7 +98,8 @@ def fetch_and_save_biometric_data():
 					"time":str(log_date),
 					"device_id":f"{serial_number}",
 					"source":"Biometric",
-					"log_type": log_type
+					"log_type": log_type,
+					"custom_unique_id": unique_id
 				})
 				emp_data.insert()
 			return 'ok'
@@ -92,25 +109,25 @@ def fetch_and_save_biometric_data():
 		frappe.log_error(frappe.get_traceback(),e)
 	
 
-@frappe.whitelist()
-def set_unique_id():
-	session = requests.Session()
-	aws_api = frappe.db.get_value('Biometric Settings','Biometric Settings','aws_api')
-	response = session.get(f'http://{aws_api}')
-	data_list = response.json()
-	for i in data_list:
-		try:
+# @frappe.whitelist()
+# def set_unique_id():
+# 	session = requests.Session()
+# 	aws_api = frappe.db.get_value('Biometric Settings','Biometric Settings','aws_api')
+# 	response = session.get(f'http://{aws_api}')
+# 	data_list = response.json()
+# 	for i in data_list:
+# 		try:
 			
-			employee_name = frappe.db.get_value('Employee',{'attendance_device_id':i['punch_id']},'name')
-			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
+# 			employee_name = frappe.db.get_value('Employee',{'attendance_device_id':i['punch_id']},'name')
+# 			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
 
-			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'custom_unique_id'): 
-				continue
+# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'custom_unique_id'): 
+# 				continue
 
-			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'name')
-			frappe.db.set_value('Employee Checkin',emp_record,'custom_unique_id',i['id'])
-		except:
-			continue
+# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'name')
+# 			frappe.db.set_value('Employee Checkin',emp_record,'custom_unique_id',i['id'])
+# 		except:
+# 			continue
 
 
 @frappe.whitelist()
@@ -136,3 +153,15 @@ def validate_data():
 		
 		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}' not in checkin_emp_data:
 			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}')
+
+
+def validate_time_threshold(log):
+	time_threshold = frappe.db.get_value('Biometric Settings','Biometric Settings','time_threshold')
+	employee = frappe.db.get_value("Employee",{"attendance_device_id":log["userid"]},"name")
+	last_punch = frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
+	if last_punch:
+		date_object = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M:%S")
+		diff = date_object - last_punch[0]['time']
+
+		if diff.total_seconds()<=float(time_threshold):
+			return 1
