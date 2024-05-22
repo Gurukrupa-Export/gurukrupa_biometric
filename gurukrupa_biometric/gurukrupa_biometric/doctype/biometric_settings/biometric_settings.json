@@ -9,9 +9,15 @@
  "field_order": [
   "biometric_api",
   "biometric_api_key",
+  "column_break_x14a",
   "aws_api",
+  "time_threshold",
   "section_break_kmcua",
-  "validate_employee_checkin"
+  "validate_employee_checkin",
+  "section_break_etlt",
+  "api_for_adding_user_in_matrix",
+  "column_break_n7de",
+  "api_for_searching_user_in_matrix"
  ],
  "fields": [
   {
@@ -37,12 +43,39 @@
    "fieldname": "validate_employee_checkin",
    "fieldtype": "Button",
    "label": "Validate Employee Checkin"
+  },
+  {
+   "fieldname": "column_break_x14a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "time_threshold",
+   "fieldtype": "Data",
+   "label": "Time threshold(In Seconds)"
+  },
+  {
+   "fieldname": "section_break_etlt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "api_for_adding_user_in_matrix",
+   "fieldtype": "Data",
+   "label": "API For adding User in Matrix"
+  },
+  {
+   "fieldname": "api_for_searching_user_in_matrix",
+   "fieldtype": "Data",
+   "label": "API For Searching User in Matrix"
+  },
+  {
+   "fieldname": "column_break_n7de",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-08-05 11:04:00.318855",
+ "modified": "2024-05-11 11:47:17.397956",
  "modified_by": "Administrator",
  "module": "Gurukrupa Biometric",
  "name": "Biometric Settings",
