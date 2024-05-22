@@ -59,6 +59,7 @@ def fetch_and_save_biometric_data():
 				original_datetime = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M:%S")
 				# Convert datetime object to desired format
 				log_date = original_datetime.strftime("%Y-%m-%d %H:%M:%S")
+				final_log_date = original_datetime.strftime("%Y-%m-%d %H:%M")
 				# log_date = log['eventdatetime']
 				unique_id = log['indexno']
 
@@ -95,7 +96,7 @@ def fetch_and_save_biometric_data():
 				emp_data = frappe.get_doc({
 					"doctype": "Employee Checkin",
 					"employee": employee_name,
-					"time":str(log_date),
+					"time":str(final_log_date),
 					"device_id":f"{serial_number}",
 					"source":"Biometric",
 					"log_type": log_type,
