@@ -56,7 +56,7 @@ def fetch_and_save_biometric_data():
 
 				employee_code = log['userid']
 				serial_number = log['device_name']
-				original_datetime = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M:%S")
+				original_datetime = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M:%S")
 				# Convert datetime object to desired format
 				log_date = original_datetime.strftime("%Y-%m-%d %H:%M:%S")
 				final_log_date = original_datetime.strftime("%Y-%m-%d %H:%M")
