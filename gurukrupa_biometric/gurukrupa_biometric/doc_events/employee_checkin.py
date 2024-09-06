@@ -161,7 +161,7 @@ def validate_time_threshold(log):
 	employee = frappe.db.get_value("Employee",{"attendance_device_id":log["userid"]},"name")
 	last_punch = frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
 	if last_punch:
-		date_object = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M:%S")
+		date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M:%S")
 		diff = date_object - last_punch[0]['time']
 
 		if diff.total_seconds()<=float(time_threshold):
