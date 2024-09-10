@@ -56,9 +56,9 @@ def fetch_and_save_biometric_data():
 
 				employee_code = log['userid']
 				serial_number = log['device_name']
-				original_datetime = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M:%S")
+				original_datetime = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
 				# Convert datetime object to desired format
-				log_date = original_datetime.strftime("%Y-%m-%d %H:%M:%S")
+				log_date = original_datetime.strftime("%Y-%m-%d %H:%M")
 				final_log_date = original_datetime.strftime("%Y-%m-%d %H:%M")
 				# log_date = log['eventdatetime']
 				unique_id = log['indexno']
@@ -120,12 +120,12 @@ def fetch_and_save_biometric_data():
 # 		try:
 			
 # 			employee_name = frappe.db.get_value('Employee',{'attendance_device_id':i['punch_id']},'name')
-# 			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
+# 			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M GMT')
 
-# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'custom_unique_id'): 
+# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M"),'employee':employee_name},'custom_unique_id'): 
 # 				continue
 
-# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'name')
+# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M"),'employee':employee_name},'name')
 # 			frappe.db.set_value('Employee Checkin',emp_record,'custom_unique_id',i['id'])
 # 		except:
 # 			continue
@@ -146,14 +146,14 @@ def validate_data():
 
 	for j in data_list[:]:
 		employee_name = frappe.db.get_value('Employee',{'attendance_device_id':j['punch_id']},'name')
-		datetime_obj = datetime.strptime(j['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
+		datetime_obj = datetime.strptime(j['log_time'],'%a, %d %b %Y %H:%M GMT')
 
 		if employee_name == None:
 			frappe.log_error(f'Employee Not Found for this punch ID {j["punch_id"]}')
 			continue
 		
-		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}' not in checkin_emp_data:
-			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}')
+		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}' not in checkin_emp_data:
+			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}')
 
 
 def validate_time_threshold(log):
