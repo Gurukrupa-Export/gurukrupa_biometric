@@ -1,5 +1,5 @@
-# Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
-# For license information, please see license.txt
+# # Copyright (c) 2019, Frappe Technologies Pvt. Ltd. and contributors
+# # For license information, please see license.txt
 
 from hrms.hr.doctype.shift_assignment.shift_assignment import get_employee_shift_timings
 from frappe.utils import cint, add_to_date, get_datetime, get_datetime_str
@@ -16,19 +16,31 @@ def fetch_and_save_biometric_data():
 	# now = datetime.now()
 	# today_date = now.strftime("%Y-%m-%d")
 	today_date = datetime.now().date()
-	formatted_today_date = today_date.strftime("%d%m%Y")
-	old_date = today_date - timedelta(days=7)
-	formatted_old_date = old_date.strftime("%d%m%Y")
+	manual = int(frappe.db.get_value("Biometric Settings","Biometric Settings","manual"))
+	if manual:
+		from_date = frappe.db.get_value("Biometric Settings","Biometric Settings","from_date")
+		to_date = frappe.db.get_value("Biometric Settings","Biometric Settings","to_date")
+		formatted_from_date = frappe.utils.formatdate(from_date, "ddMMyyyy")
+		formatted_to_date = frappe.utils.formatdate(to_date, "ddMMyyyy")
+	else:
+		day_threshold = int(frappe.db.get_value("Biometric Settings","Biometric Settings","day_threshold"))
+		today_date = datetime.now().date()
+		formatted_to_date = today_date.strftime("%d%m%Y")
+		old_date = today_date - timedelta(days=day_threshold)
+		formatted_from_date = old_date.strftime("%d%m%Y")
+		
+	# formatted_today_date = today_date.strftime("%d%m%Y")
+	# old_date = today_date - timedelta(days=2)
+	# formatted_old_date = old_date.strftime("%d%m%Y")
 
-	today_date = datetime.now().date()
+	# today_date = datetime.now().date()
 	exist_emp_name = []
 	for k in frappe.db.get_list('Employee Checkin',fields=['employee','time']):
 		exist_emp_name.append(f'{k["employee"]}/{k["time"]}')
 	
 	api_url = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api')
 
-	url = f"{api_url};date-range={formatted_old_date}-{formatted_today_date}"
-
+	url = f"{api_url};date-range={formatted_from_date}-{formatted_to_date}"
 	api_key = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api_key')
 	
 	# Prepare request parameters
@@ -47,13 +59,14 @@ def fetch_and_save_biometric_data():
 		if response.status_code == 200:
 			# Parse the response JSON
 			data = response.json()["event-ta"]
+			# data = response.json()["event-ta"]
 			# Iterate over the logs and save them to "Biometric Data" DocType
 			
 			for log in data:
 				skip = validate_time_threshold(log)
 				if skip:
 					continue
-
+					
 				employee_code = log['userid']
 				serial_number = log['device_name']
 				original_datetime = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
@@ -120,12 +133,12 @@ def fetch_and_save_biometric_data():
 # 		try:
 			
 # 			employee_name = frappe.db.get_value('Employee',{'attendance_device_id':i['punch_id']},'name')
-# 			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M GMT')
+# 			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
 
-# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M"),'employee':employee_name},'custom_unique_id'): 
+# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'custom_unique_id'): 
 # 				continue
 
-# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M"),'employee':employee_name},'name')
+# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'name')
 # 			frappe.db.set_value('Employee Checkin',emp_record,'custom_unique_id',i['id'])
 # 		except:
 # 			continue
@@ -146,14 +159,14 @@ def validate_data():
 
 	for j in data_list[:]:
 		employee_name = frappe.db.get_value('Employee',{'attendance_device_id':j['punch_id']},'name')
-		datetime_obj = datetime.strptime(j['log_time'],'%a, %d %b %Y %H:%M GMT')
+		datetime_obj = datetime.strptime(j['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
 
 		if employee_name == None:
 			frappe.log_error(f'Employee Not Found for this punch ID {j["punch_id"]}')
 			continue
 		
-		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}' not in checkin_emp_data:
-			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}')
+		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}' not in checkin_emp_data:
+			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}')
 
 
 def validate_time_threshold(log):
@@ -161,8 +174,9 @@ def validate_time_threshold(log):
 	employee = frappe.db.get_value("Employee",{"attendance_device_id":log["userid"]},"name")
 	last_punch = frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
 	if last_punch:
-		date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
+		date_object = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M")
 		diff = date_object - last_punch[0]['time']
 
 		if diff.total_seconds()<=float(time_threshold):
 			return 1
+		
