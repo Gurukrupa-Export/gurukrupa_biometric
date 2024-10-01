@@ -135,10 +135,10 @@ def fetch_and_save_biometric_data():
 # 			employee_name = frappe.db.get_value('Employee',{'attendance_device_id':i['punch_id']},'name')
 # 			datetime_obj = datetime.strptime(i['log_time'],'%a, %d %b %Y %H:%M:%S GMT')
 
-# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'custom_unique_id'): 
+# 			if frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M"),'employee':employee_name},'custom_unique_id'): 
 # 				continue
 
-# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S"),'employee':employee_name},'name')
+# 			emp_record = frappe.db.get_value('Employee Checkin',{'time':datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M"),'employee':employee_name},'name')
 # 			frappe.db.set_value('Employee Checkin',emp_record,'custom_unique_id',i['id'])
 # 		except:
 # 			continue
@@ -165,8 +165,8 @@ def validate_data():
 			frappe.log_error(f'Employee Not Found for this punch ID {j["punch_id"]}')
 			continue
 		
-		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}' not in checkin_emp_data:
-			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M:%S")}')
+		if f'{employee_name}/{datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}' not in checkin_emp_data:
+			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}')
 
 
 def validate_time_threshold(log):
@@ -174,7 +174,7 @@ def validate_time_threshold(log):
 	employee = frappe.db.get_value("Employee",{"attendance_device_id":log["userid"]},"name")
 	last_punch = frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
 	if last_punch:
-		date_object = datetime.strptime(log['eventdatetime'], "%d/%m/%Y %H:%M")
+		date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
 		diff = date_object - last_punch[0]['time']
 
 		if diff.total_seconds()<=float(time_threshold):
