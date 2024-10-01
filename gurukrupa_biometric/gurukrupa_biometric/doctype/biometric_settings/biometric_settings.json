@@ -11,13 +11,20 @@
   "biometric_api_key",
   "column_break_x14a",
   "aws_api",
-  "time_threshold",
   "section_break_kmcua",
+  "time_threshold",
+  "column_break_ttpt",
+  "day_threshold",
+  "section_break_bjyt",
   "validate_employee_checkin",
   "section_break_etlt",
   "api_for_adding_user_in_matrix",
   "column_break_n7de",
-  "api_for_searching_user_in_matrix"
+  "api_for_searching_user_in_matrix",
+  "section_break_avw1",
+  "manual",
+  "from_date",
+  "to_date"
  ],
  "fields": [
   {
@@ -37,7 +44,8 @@
   },
   {
    "fieldname": "section_break_kmcua",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Threshold"
   },
   {
    "fieldname": "validate_employee_checkin",
@@ -51,7 +59,7 @@
   {
    "fieldname": "time_threshold",
    "fieldtype": "Data",
-   "label": "Time threshold(In Seconds)"
+   "label": "Time Threshold(In Seconds)"
   },
   {
    "fieldname": "section_break_etlt",
@@ -70,12 +78,49 @@
   {
    "fieldname": "column_break_n7de",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "day_threshold",
+   "fieldtype": "Int",
+   "label": "Day Threshold(In Days)"
+  },
+  {
+   "fieldname": "section_break_bjyt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ttpt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_avw1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "dd-mm-yyyy",
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date",
+   "mandatory_depends_on": "eval:doc.manual"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date",
+   "mandatory_depends_on": "eval:doc.manual"
+  },
+  {
+   "default": "0",
+   "fieldname": "manual",
+   "fieldtype": "Check",
+   "label": "Manual"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-05-11 11:47:17.397956",
+ "modified": "2024-09-28 12:21:07.992924",
  "modified_by": "Administrator",
  "module": "Gurukrupa Biometric",
  "name": "Biometric Settings",
