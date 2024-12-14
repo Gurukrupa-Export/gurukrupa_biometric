@@ -78,7 +78,7 @@ def fetch_and_save_biometric_data():
 
 				
 				
-				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code},'name')
+				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code,'status':'Active'},'name')
 				if employee_name == None:
 					# frappe.log_error(f'Employee Not Found for this punch ID {employee_code}')
 					continue
