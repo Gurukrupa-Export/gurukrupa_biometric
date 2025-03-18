@@ -102,11 +102,11 @@ app_license = "MIT"
 # ---------------
 # Hook on document methods and events
 
-doc_events = {
-	"Employee": {
-		"before_save": "gurukrupa_biometric.gurukrupa_biometric.doc_events.employee.before_save",
-	}
-}
+# doc_events = {
+# 	"Employee": {
+# 		"before_save": "gurukrupa_biometric.gurukrupa_biometric.doc_events.employee.before_save",
+# 	}
+# }
 
 # Scheduled Tasks
 # ---------------
