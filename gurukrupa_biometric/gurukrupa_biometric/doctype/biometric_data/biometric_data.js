@@ -35,6 +35,7 @@ frappe.ui.form.on('Biometric Data', {
 				},
 				callback: function(r) {
 					if (!r.exc) {
+						console.log(r);
 						frappe.msgprint("Biometric logs fetched successfully");
 						frm.reload_doc();
 					}
