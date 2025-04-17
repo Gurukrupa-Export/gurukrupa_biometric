@@ -34,10 +34,12 @@ frappe.ui.form.on('Biometric Data', {
 					docname: frm.doc.name
 				},
 				callback: function(r) {
-					if (!r.exc) {
-						console.log(r);
+					if (!r.exc) {						
 						frappe.msgprint("Biometric logs fetched successfully");
 						frm.reload_doc();
+					}
+					else{
+						frappe.msgprint("Biometric logs not fetched");
 					}
 				}
 			});
