@@ -44,6 +44,23 @@ frappe.ui.form.on('Biometric Data', {
 				}
 			});
 		});
+		frm.add_custom_button('Sandwitch Rule', function() {
+			frappe.call({ 
+				method: 'gke_customization.gke_hrms.utils.check_sadwitch_rule',
+				args: {
+					docname: frm.doc.name
+				},
+				callback: function(r) {
+					if (!r.exc) {						
+						frappe.msgprint("check_sadwitch_rule successfully");
+						frm.reload_doc();
+					}
+					else{
+						frappe.msgprint("check_sadwitch_rule not fetched");
+					}
+				}
+			});
+		});
 	}
 });
 
