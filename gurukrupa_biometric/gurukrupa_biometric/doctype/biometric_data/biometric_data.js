@@ -34,9 +34,29 @@ frappe.ui.form.on('Biometric Data', {
 					docname: frm.doc.name
 				},
 				callback: function(r) {
-					if (!r.exc) {
+					if (!r.exc) {						
 						frappe.msgprint("Biometric logs fetched successfully");
 						frm.reload_doc();
+					}
+					else{
+						frappe.msgprint("Biometric logs not fetched");
+					}
+				}
+			});
+		});
+		frm.add_custom_button('Sandwitch Rule', function() {
+			frappe.call({ 
+				method: 'gke_customization.gke_hrms.utils.check_sadwitch_rule',
+				args: {
+					docname: frm.doc.name
+				},
+				callback: function(r) {
+					if (!r.exc) {						
+						frappe.msgprint("check_sadwitch_rule successfully");
+						frm.reload_doc();
+					}
+					else{
+						frappe.msgprint("check_sadwitch_rule not fetched");
 					}
 				}
 			});
