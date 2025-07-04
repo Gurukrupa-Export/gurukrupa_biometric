@@ -11,6 +11,7 @@ class BiometricData(Document):
 	def fetch_and_save_biometric_data(self):
 		today_date = datetime.now().date()
 		settings = frappe.get_cached_doc("Biometric Settings", "Biometric Settings")
+
 		if cint(settings.manual):
 			from_date = settings.from_date
 			to_date =  settings.to_date
@@ -52,9 +53,13 @@ class BiometricData(Document):
 				data = response.json()["event-ta"]
 					
 				# Iterate over the logs and save them to "Biometric Data" DocType
-				# for log in data[:1500]:
+				abc = [] 
 				for log in data:
+					if log['userid'] != self.punch_id:
+						continue
+						
 					skip = validate_time_threshold(log, checkin_from_date, checkin_to_date)
+					abc.append(log)
 					if skip:
 						continue
 						
@@ -70,19 +75,20 @@ class BiometricData(Document):
 					employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code,'status':'Active'},'name')
 					if employee_name == None:
 						continue
+
 					if exist_emp_name:
 						if f'{employee_name}/{log_date}' in exist_emp_name:
 							continue
 
-					# frappe.throw(f"{exist_emp_name} || {employee_name}/{log_date}")
 					shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]			
-
+					# frappe.throw(f" {shift_det} \\\ {shift_det.shift_type.name}")
+					
 					if get_datetime(log_date) > shift_det.actual_start and get_datetime(log_date) < shift_det.actual_end:
 						log_detail = frappe.db.sql(f"""select log_type from `tabEmployee Checkin` tec 
 								 							where employee = '{employee_name}' 
 					   										and DATE(time)='{log_date.split(' ')[0]}'
 													""",as_dict=1)
-						# frappe.throw(f"{log_detail}")
+						
 						if log_detail == []:
 							log_type = 'IN'
 						else:
@@ -101,11 +107,10 @@ class BiometricData(Document):
 					else:
 						log_type = 'IN'
 
-					# frappe.throw(f"{log_type} {employee_name} {final_log_date} {serial_number} {unique_id}")
 					emp_data = frappe.get_doc({
 						"doctype": "Employee Checkin",
 						"employee": employee_name,
-						"time":str(final_log_date),
+						"time": str(final_log_date),
 						"device_id":f"{serial_number}",
 						"source":"Biometric",
 						"log_type": log_type,
@@ -113,6 +118,7 @@ class BiometricData(Document):
 					})
 					
 					emp_data.insert(ignore_permissions=True)
+				# frappe.throw(f"{abc}")
 				return 'ok'
 			else:
 				frappe.log_error(frappe.get_traceback(),f"Response code is: {response.status_code}. Check URL")
@@ -128,8 +134,23 @@ def validate_time_threshold(log, checkin_from_date, checkin_to_date):
 							  and DATE(time) between '{checkin_from_date}' and '{checkin_to_date}'
 						order by time desc
 						""",as_dict=1)
-		
-		# frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
+	
+		if last_punch:
+			try:
+				date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
+				diff = date_object - last_punch[0]['time']
+				
+				# frappe.throw(f"last_punch {last_punch} ||  date_object {date_object} || diff {diff} ||  time_threshold {time_threshold}")
+				
+				if diff.total_seconds()<=float(time_threshold):
+					return True
+			except Exception as e:
+				frappe.log_error(frappe.get_traceback(), f"Error in validate_time_threshold: {e}")
+				# frappe.msgprint(f"here")
+				return True  # Safer to skip if any error occurs
+
+		return False
+	# frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
 		# if last_punch:
 		# 	date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
 		# 	frappe.throw(f"{date_object}")
@@ -137,18 +158,6 @@ def validate_time_threshold(log, checkin_from_date, checkin_to_date):
 
 		# 	if diff.total_seconds()<=float(time_threshold):
 		# 		return 1
-
-		if last_punch:
-			try:
-				date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
-				diff = date_object - last_punch[0]['time']
-				if diff.total_seconds() <= time_threshold:
-					return True
-			except Exception as e:
-				frappe.log_error(frappe.get_traceback(), f"Error in validate_time_threshold: {e}")
-				return True  # Safer to skip if any error occurs
-
-		return False
 
 @frappe.whitelist()
 def fetch_and_save_data(docname):
@@ -174,7 +183,6 @@ def fetch_and_save_biometric_data1():
 	# formatted_today_date = today_date.strftime("%d%m%Y")
 	# old_date = today_date - timedelta(days=2)
 	# formatted_old_date = old_date.strftime("%d%m%Y")
-
 	# today_date = datetime.now().date()
 	exist_emp_name = []
 	for k in frappe.db.get_list('Employee Checkin',fields=['employee','time']):

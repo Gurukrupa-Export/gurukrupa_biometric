@@ -1,68 +1,86 @@
 {
-"actions": [],
-"allow_rename": 1,
-"autoname": "format:{date_time}",
-"creation": "2023-08-02 12:53:21.903986",
-"default_view": "List",
-"doctype": "DocType",
-"editable_grid": 1,
-"engine": "InnoDB",
-"field_order": [
-    "date_time",
-    "section_break_iimb8",
-    "employee_log",
-    "amended_from"
-],
-"fields": [
-    {
-    "fieldname": "date_time",
-    "fieldtype": "Datetime",
-    "label": "Datetime"
-    },
-    {
-    "fieldname": "section_break_iimb8",
-    "fieldtype": "Section Break"
-    },
-    {
-    "fieldname": "employee_log",
-    "fieldtype": "Table",
-    "label": "Employee Log",
-    "options": "Biometric Employee Details"
-    },
-    {
-    "fieldname": "amended_from",
-    "fieldtype": "Link",
-    "label": "Amended From",
-    "no_copy": 1,
-    "options": "Biometric Data",
-    "print_hide": 1,
-    "read_only": 1
-    }
-],
-"index_web_pages_for_search": 1,
-"is_submittable": 1,
-"links": [],
-"modified": "2023-08-04 12:19:26.027551",
-"modified_by": "Administrator",
-"module": "Gurukrupa Biometric",
-"name": "Biometric Data",
-"naming_rule": "Expression",
-"owner": "Administrator",
-"permissions": [
-    {
-    "create": 1,
-    "delete": 1,
-    "email": 1,
-    "export": 1,
-    "print": 1,
-    "read": 1,
-    "report": 1,
-    "role": "System Manager",
-    "share": 1,
-    "write": 1
-    }
-],
-"sort_field": "modified",
-"sort_order": "DESC",
-"states": []
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{date_time}",
+ "creation": "2023-08-02 12:53:21.903986",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "date_time",
+  "from_date",
+  "to_date",
+  "section_break_iimb8",
+  "employee_log",
+  "amended_from",
+  "punch_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "date_time",
+   "fieldtype": "Datetime",
+   "label": "Datetime"
+  },
+  {
+   "fieldname": "section_break_iimb8",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "employee_log",
+   "fieldtype": "Table",
+   "label": "Employee Log",
+   "options": "Biometric Employee Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Biometric Data",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date"
+  },
+  {
+   "fieldname": "punch_id",
+   "fieldtype": "Data",
+   "label": "Punch id"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-07-04 14:48:22.608693",
+ "modified_by": "Administrator",
+ "module": "Gurukrupa Biometric",
+ "name": "Biometric Data",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }
