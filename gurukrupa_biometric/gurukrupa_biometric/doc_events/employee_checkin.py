@@ -180,3 +180,61 @@ def validate_time_threshold(log):
 		if diff.total_seconds()<=float(time_threshold):
 			return 1
 		
+@frappe.whitelist()
+def set_skip_attendance():
+	today_date = datetime.now().date()
+	manual = int(frappe.db.get_value("Biometric Settings","Biometric Settings","manual"))
+	if manual:
+		from_date = frappe.db.get_value("Biometric Settings","Biometric Settings","from_date")
+		to_date = frappe.db.get_value("Biometric Settings","Biometric Settings","to_date")
+		formatted_from_date = frappe.utils.formatdate(from_date, "yyyy-MM-dd")
+		formatted_to_date = frappe.utils.formatdate(to_date, "yyyy-MM-dd")
+	else:
+		day_threshold = int(frappe.db.get_value("Biometric Settings","Biometric Settings","day_threshold"))
+		today_date = datetime.now().date()
+		formatted_to_date = today_date.strftime("%Y-%m-%d")
+		old_date = today_date - timedelta(days=day_threshold)
+		formatted_from_date = old_date.strftime("%Y-%m-%d")
+
+	logs = get_employee_checkins(formatted_from_date,formatted_to_date)
+
+	group_key = lambda x: (x["employee"], x["time"], x["name"])  # noqa
+	for key, group in groupby(sorted(logs, key=group_key), key=group_key):
+		emp_checkin = key[2]
+		attendance_date = key[1].date()
+		employee = key[0]
+		
+		attendance = get_marked_attendance_dates_between(employee, attendance_date)
+
+		if emp_checkin and attendance:
+			frappe.db.set_value("Employee Checkin",emp_checkin,"skip_auto_attendance",0)
+			frappe.db.set_value("Attendance",attendance,"docstatus", 2)
+
+
+def get_employee_checkins(from_date,to_date):
+	employee_checkins = frappe.get_all("Employee Checkin",
+			fields=[
+				"name","employee",
+				"log_type","time",
+				"shift","skip_auto_attendance"
+			],
+			filters={
+				"skip_auto_attendance": 1,
+				"attendance": ("is", "not set"),
+				"time": ("between", [from_date, to_date]),
+			},
+			order_by="employee,time",
+		)
+	
+	return employee_checkins
+
+def get_marked_attendance_dates_between(employee, date):
+	attendance = frappe.db.get_value("Attendance", 
+			{
+				'employee': employee, 
+				'attendance_date': date, 
+				'docstatus': ('<', 2)
+			},
+		'name')
+
+	return attendance
