@@ -9,7 +9,7 @@ from frappe.model.document import Document
 from frappe.utils import cint, get_datetime
 import requests
 from datetime import datetime,timedelta
-
+from itertools import groupby
 
 @frappe.whitelist()
 def fetch_and_save_biometric_data():
