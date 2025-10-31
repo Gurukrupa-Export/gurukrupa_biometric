@@ -212,40 +212,41 @@ def set_skip_attendance():
 
 @frappe.whitelist()
 def set_skip_attendance_check():
-    settings = frappe.db.get_value(
-        "Biometric Settings",
-        "Biometric Settings",
-        ["manual", "from_date", "to_date", "day_threshold"],
-        as_dict=True
-    )
+	settings = frappe.db.get_value(
+		"Biometric Settings",
+		"Biometric Settings",
+		["manual", "from_date", "to_date", "day_threshold"],
+		as_dict=True
+	)
 
-    today = datetime.now().date()
+	today = datetime.now().date()
 
-    # Determine from/to date range
-    if int(settings.manual):
-        from_date = settings.from_date
-        to_date = settings.to_date
-    else:
-        day_threshold = int(settings.day_threshold)
-        to_date = today
-        from_date = today - timedelta(days=day_threshold)
+	# Determine from/to date range
+	if int(settings.manual):
+		from_date = settings.from_date
+		to_date = settings.to_date
+	else:
+		day_threshold = int(settings.day_threshold)
+		to_date = today
+		from_date = today - timedelta(days=day_threshold)
 
-    # Fetch checkins within range
-    logs = get_employee_checkins(from_date, to_date)
+	# Fetch checkins within range
+	logs = get_employee_checkins(from_date, to_date)
 
-    for log in logs:
-        emp_checkin = log.name
-        employee = log.employee
-        attendance_date = log.time.date()
+	for log in logs:
+		emp_checkin = log.name
+		employee = log.employee
+		attendance_date = log.time.date()
 
-        attendance = get_marked_attendance_dates_between(employee, attendance_date)
-        if attendance:
-            # Reset skip flag
-            frappe.db.set_value("Employee Checkin", emp_checkin, "skip_auto_attendance", 0)
-            # Cancel attendance
-            frappe.db.set_value("Attendance", attendance, "docstatus", 2)
+		attendance = get_marked_attendance_dates_between(employee, attendance_date)
+		
+		if attendance:
+			frappe.db.set_value("Attendance", attendance, "docstatus", 2) # Cancel attendance
+		if emp_checkin:
+			frappe.db.set_value("Employee Checkin", emp_checkin, "skip_auto_attendance", 0) # Reset skip
+			frappe.db.set_value("Employee Checkin", emp_checkin, "attendance", "") # Reset attendance
 
-    frappe.db.commit()
+	frappe.db.commit()
 
 def get_employee_checkins(from_date,to_date):
 	employee_checkins = frappe.get_all("Employee Checkin",
