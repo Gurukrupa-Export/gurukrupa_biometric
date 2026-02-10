@@ -16,45 +16,48 @@ def fetch_and_save_biometric_data():
 	# now = datetime.now()
 	# today_date = now.strftime("%Y-%m-%d")
 	today_date = datetime.now().date()
-	manual = int(frappe.db.get_value("Biometric Settings","Biometric Settings","manual"))
-	if manual:
-		from_date = frappe.db.get_value("Biometric Settings","Biometric Settings","from_date")
-		to_date = frappe.db.get_value("Biometric Settings","Biometric Settings","to_date")
+	settings = frappe.get_cached_doc("Biometric Settings", "Biometric Settings")
+
+	if cint(settings.manual):
+		from_date = settings.from_date
+		to_date =  settings.to_date
 		formatted_from_date = frappe.utils.formatdate(from_date, "ddMMyyyy")
 		formatted_to_date = frappe.utils.formatdate(to_date, "ddMMyyyy")
 	else:
-		day_threshold = int(frappe.db.get_value("Biometric Settings","Biometric Settings","day_threshold"))
-		today_date = datetime.now().date()
-		formatted_to_date = today_date.strftime("%d%m%Y")
-		old_date = today_date - timedelta(days=day_threshold)
+		old_date = today_date - timedelta(days=cint(settings.day_threshold))
+		from_date = today_date - timedelta(days=cint(settings.day_threshold))
+		to_date = today_date
+
 		formatted_from_date = old_date.strftime("%d%m%Y")
+		formatted_to_date = today_date.strftime("%d%m%Y")
 		
-	# formatted_today_date = today_date.strftime("%d%m%Y")
-	# old_date = today_date - timedelta(days=2)
-	# formatted_old_date = old_date.strftime("%d%m%Y")
-
-	# today_date = datetime.now().date()
+	# check employee checkin for given date
 	exist_emp_name = []
-	for k in frappe.db.get_list('Employee Checkin',fields=['employee','time']):
-		exist_emp_name.append(f'{k["employee"]}/{k["time"]}')
-	
-	api_url = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api')
+	checkin_from_date = frappe.utils.formatdate(from_date, "yyyy-mm-dd")
+	checkin_to_date = frappe.utils.formatdate(to_date, "yyyy-mm-dd")
 
-	url = f"{api_url};date-range={formatted_from_date}-{formatted_to_date}"
+	checkin_doc = frappe.db.sql(f""" SELECT employee,time FROM `tabEmployee Checkin`
+					WHERE DATE(time) between '{checkin_from_date}' and '{checkin_to_date}' """,as_dict=1) 
+	if checkin_doc:
+		for k in checkin_doc:
+			exist_emp_name.append(f'{k["employee"]}/{k["time"]}')
+	
+	# fetch api url and api key from Biometric Settings
+	url = f"{settings.biometric_api};date-range={formatted_from_date}-{formatted_to_date}"
+		
 	api_key = frappe.db.get_value('Biometric Settings','Biometric Settings','biometric_api_key')
 	
 	# Prepare request parameters
 	payload = {}
 	headers = {
-	'Authorization': api_key,
-	'Cookie': 'ASP.NET_SessionId=4t2hfqzatrgd4akbdje2xjr4'
+		'Authorization': api_key,
+		'Cookie': 'ASP.NET_SessionId=4t2hfqzatrgd4akbdje2xjr4'
 	}
 	
 	try:
 		# Send GET request to the API
 		response = requests.request("GET", url, headers=headers, data=payload)
-		
-
+	
 		# Check if the request was successful (status code 200)
 		if response.status_code == 200:
 			# Parse the response JSON
@@ -63,31 +66,29 @@ def fetch_and_save_biometric_data():
 			# Iterate over the logs and save them to "Biometric Data" DocType
 			
 			for log in data:
-				skip = validate_time_threshold(log)
+				skip = validate_time_threshold(log, checkin_from_date, checkin_to_date)
 				if skip:
 					continue
 					
 				employee_code = log['userid']
 				serial_number = log['device_name']
 				original_datetime = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
+				
 				# Convert datetime object to desired format
 				log_date = original_datetime.strftime("%Y-%m-%d %H:%M")
 				final_log_date = original_datetime.strftime("%Y-%m-%d %H:%M")
-				# log_date = log['eventdatetime']
-				unique_id = log['indexno']
-
-				
+				unique_id = log['indexno']				
 				
 				employee_name = frappe.db.get_value('Employee',{'attendance_device_id':employee_code,'status':'Active'},'name')
 				if employee_name == None:
-					# frappe.log_error(f'Employee Not Found for this punch ID {employee_code}')
 					continue
-				if f'{employee_name}/{log_date}' in exist_emp_name:
-					continue
+
+				if exist_emp_name:
+					if f'{employee_name}/{log_date}' in exist_emp_name:
+						continue
 
 				shift_det = get_employee_shift_timings(employee_name, get_datetime(log_date), True)[1]
 				
-
 				if get_datetime(log_date) > shift_det.actual_start and get_datetime(log_date) < shift_det.actual_end:
 					if frappe.db.sql(f"""select log_type  from `tabEmployee Checkin` tec where employee = '{employee_name}' and DATE(time)='{log_date.split(' ')[0]}'""",as_dict=1) == []:
 						log_type = 'IN'
@@ -169,16 +170,28 @@ def validate_data():
 			frappe.log_error(f'Missing Data for {employee_name} of this time {datetime.strftime(datetime_obj,"%Y-%m-%d %H:%M")}')
 
 
-def validate_time_threshold(log):
+def validate_time_threshold(log, checkin_from_date, checkin_to_date):
 	time_threshold = frappe.db.get_value('Biometric Settings','Biometric Settings','time_threshold')
-	employee = frappe.db.get_value("Employee",{"attendance_device_id":log["userid"]},"name")
-	last_punch = frappe.db.get_list("Employee Checkin",filters={"employee":employee},fields=["time"],order_by='time desc')
-	if last_punch:
-		date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
-		diff = date_object - last_punch[0]['time']
+	employee = frappe.db.get_value("Employee",{"attendance_device_id":log["userid"],"status": "Active"},"name")
+	if employee:
+		last_punch = frappe.db.sql(f""" SELECT time FROM `tabEmployee Checkin`
+                        WHERE employee = '{employee}'
+							  and DATE(time) between '{checkin_from_date}' and '{checkin_to_date}'
+						order by time desc
+						""",as_dict=1)
+	
+		if last_punch:
+			try:
+				date_object = datetime.strptime(log['edatetime_e'], "%d/%m/%Y %H:%M")
+				diff = date_object - last_punch[0]['time']
 
-		if diff.total_seconds()<=float(time_threshold):
-			return 1
+				if diff.total_seconds()<=float(time_threshold):
+					return True
+			except Exception as e:
+				frappe.log_error(frappe.get_traceback(), f"Error in validate_time_threshold: {e}")
+				return True  # Safer to skip if any error occurs
+
+		return False
 		
 @frappe.whitelist()
 def set_skip_attendance():
