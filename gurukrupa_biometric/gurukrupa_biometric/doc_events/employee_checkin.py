@@ -97,7 +97,6 @@ def fetch_and_save_biometric_data():
 						f"""SELECT log_type  from `tabEmployee Checkin` tec where employee ='{employee_name}' and time < '{log_date}' ORDER BY time DESC """
 						,as_dict=1)
 
-
 						if len(employee_chekin_data) == 0: log_type = 'IN'
 						else:
 							if employee_chekin_data[0]['log_type'] == 'IN':
