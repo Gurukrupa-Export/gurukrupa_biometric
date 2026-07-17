@@ -250,39 +250,52 @@ def set_skip_attendance_check():
 		employee = log.employee
 		attendance_date = log.time.date()
 
+		# attendance = get_marked_attendance_dates_between(employee, attendance_date)
+		
+		# if attendance:
+		# 	frappe.db.set_value("Attendance", attendance, "docstatus", 2) # Cancel attendance
+		# if emp_checkin:
+		# 	frappe.db.set_value("Employee Checkin", emp_checkin, "skip_auto_attendance", 0) # Reset skip
+		# 	frappe.db.set_value("Employee Checkin", emp_checkin, "attendance", "") # Reset attendance
 		attendance = get_marked_attendance_dates_between(employee, attendance_date)
 		
-		if attendance:
-			frappe.db.set_value("Attendance", attendance, "docstatus", 2) # Cancel attendance
+		if attendance and attendance.docstatus == 1:
+			frappe.db.set_value("Attendance", attendance.name, "docstatus", 2) # Cancel attendance
 		if emp_checkin:
 			frappe.db.set_value("Employee Checkin", emp_checkin, "skip_auto_attendance", 0) # Reset skip
-			frappe.db.set_value("Employee Checkin", emp_checkin, "attendance", "") # Reset attendance
+			if log.attendance: 
+				attendance_docstatus = frappe.db.get_value("Attendance", { "name": log.attendance}, ["name", "docstatus"], as_dict=True)
+				if attendance_docstatus.docstatus == 2:
+					frappe.db.set_value("Employee Checkin", emp_checkin, "attendance", "")
 
 	frappe.db.commit()
 
 def get_employee_checkins(from_date,to_date):
-	employee_checkins = frappe.get_all("Employee Checkin",
-			fields=[
-				"name","employee",
-				"log_type","time",
-				"shift","skip_auto_attendance"
-			],
-			filters={
-				"skip_auto_attendance": 1,
-				# "attendance": ("is", "not set"),
-				"attendance": ["is", "not set"],
-				"time": ("between", [from_date, to_date]),
-			},
-			order_by="employee,time",
-		)
-	
-	return employee_checkins
+    employee_checkins = frappe.db.sql("""
+		SELECT 
+  			te.name, te.employee, te.log_type, te.time, 
+     		te.shift, te.skip_auto_attendance, te.attendance, ta.docstatus AS attendance_docstatus
+		FROM 
+  			`tabEmployee Checkin` as te
+		Left JOIN
+			`tabAttendance` as ta ON ta.name = te.attendance
+		WHERE 
+  			DATE(te.time) BETWEEN %(from_date)s AND %(to_date)s
+			AND te.skip_auto_attendance = 1
+		ORDER BY employee, time
+	""", {"from_date": from_date, "to_date": to_date}, as_dict=True)
+    
+    return employee_checkins
 
 def get_marked_attendance_dates_between(employee, date):
-	attendance = frappe.db.get_value("Attendance", 
-			# {'employee': employee, 'attendance_date': date, 'docstatus': ('<', 2)},
-			{"employee": employee, "attendance_date": date, "docstatus": ("<", 2)},
-			"name"
-		)
-
-	return attendance
+    attendance = frappe.db.get_value(
+        "Attendance",
+        {
+            "employee": employee,
+            "attendance_date": date,
+            "docstatus": ("<", 2)
+        },
+        ["name", "docstatus"],
+        as_dict=True
+    )
+    return attendance
