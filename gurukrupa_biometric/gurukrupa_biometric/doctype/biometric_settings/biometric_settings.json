@@ -24,7 +24,9 @@
   "section_break_avw1",
   "manual",
   "from_date",
-  "to_date"
+  "to_date",
+  "section_break_2bon",
+  "auto_mail_id"
  ],
  "fields": [
   {
@@ -115,6 +117,15 @@
    "fieldname": "manual",
    "fieldtype": "Check",
    "label": "Manual"
+  },
+  {
+   "fieldname": "section_break_2bon",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "auto_mail_id",
+   "fieldtype": "Data",
+   "label": "Auto Mail Id"
   }
  ],
  "index_web_pages_for_search": 1,
